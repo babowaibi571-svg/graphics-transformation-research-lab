@@ -6,12 +6,12 @@
     <title>图形转化研究室</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background-color: #f1f5f9; height: 100vh; display: flex; overflow: hidden; }
+        body { margin: 0; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #dff2ec 0%, #eef7f3 38%, #fff4d8 100%); height: 100vh; display: flex; overflow: hidden; }
         
-        #app-container { display: flex; width: 100%; height: 100%; padding: 15px; gap: 15px; }
+        #app-container { display: grid; grid-template-columns: 240px minmax(0, 1fr) 400px; grid-template-rows: minmax(455px, 64vh) minmax(190px, 1fr); width: 100%; height: 100%; padding: 15px; gap: 15px; background: radial-gradient(circle at 20% 18%, rgba(255,199,95,0.22), transparent 28%), radial-gradient(circle at 84% 12%, rgba(37,99,235,0.12), transparent 24%); }
         
-        #toolbar { width: 240px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 10; }
-        .logo-title { font-size: 18px; font-weight: bold; color: #0f172a; margin-bottom: 5px; text-align: center; }
+        #toolbar { grid-column: 1; grid-row: 1; width: 240px; min-height: 0; overflow: hidden; background: linear-gradient(180deg, #fff7d6 0%, #fffaf0 100%); border: 2px solid #f6c453; border-radius: 16px; box-shadow: 0 8px 24px rgba(36, 76, 87, 0.12); padding: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 10; }
+        .logo-title { font-size: 18px; font-weight: bold; color: #174e4a; margin-bottom: 5px; text-align: center; }
         .legend { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 5px; }
         .legend-box { width: 18px; height: 18px; border: 2px solid #64748b; display: inline-block; vertical-align: middle; background: #e2e8f0; margin-right: 5px; }
         
@@ -26,7 +26,7 @@
         .reset-btn { margin-top: auto; border-color: #fecaca; color: #ef4444; background: #fef2f2; }
         .reset-btn:hover { background: #fee2e2; }
 
-        #canvas-container { flex: 1; background: white; border-radius: 12px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); position: relative; overflow: hidden; border: 2px solid #e2e8f0; }
+        #canvas-container { grid-column: 2; grid-row: 1; min-width: 0; min-height: 0; background: linear-gradient(180deg, #ffffff 0%, #f7fbf8 100%); border-radius: 18px; box-shadow: inset 0 2px 10px rgba(13, 71, 69, 0.06), 0 8px 24px rgba(36, 76, 87, 0.10); position: relative; overflow: hidden; border: 2px solid #b7d9c9; }
         svg { width: 100%; height: 100%; display: block; touch-action: none; cursor: default; }
         .shape-poly { cursor: grab; transition: filter 0.2s; }
         .shape-poly:active { cursor: grabbing; filter: brightness(0.95); }
@@ -38,27 +38,40 @@
         @keyframes pulse-stroke { 0% { stroke-width: 3; opacity: 1; } 50% { stroke-width: 6; opacity: 0.5; } 100% { stroke-width: 3; opacity: 1; } }
         .pulsing-hint { animation: pulse-stroke 1.5s infinite; pointer-events: none; }
 
-        #right-sidebar { width: 340px; display: flex; flex-direction: column; gap: 15px; }
+        #right-sidebar { grid-column: 3; grid-row: 1 / 3; width: 400px; display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: hidden; }
         
-        #history-panel { flex: 1; background: #1e293b; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 15px; display: flex; flex-direction: column; overflow: hidden; }
-        .panel-title { color: #f8fafc; font-size: 15px; font-weight: bold; margin-bottom: 12px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        #history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 5px; }
-        #history-list::-webkit-scrollbar { width: 6px; }
-        #history-list::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        #history-panel { grid-column: 1 / 3; grid-row: 2; min-height: 0; background: linear-gradient(180deg, #e8f7f0 0%, #d9f0e7 100%); border: 2px solid #82c7ad; border-radius: 18px; box-shadow: 0 8px 22px rgba(23, 78, 74, 0.12); padding: 10px 18px 12px; display: flex; flex-direction: column; overflow: hidden; }
+        .panel-title { color: #174e4a; font-size: 15px; font-weight: bold; margin-bottom: 8px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        #history-list { flex: 1; overflow-x: auto; overflow-y: hidden; display: flex; flex-direction: row; align-items: flex-start; gap: 12px; padding: 2px 6px 6px 2px; min-height: 0; }
+        #history-list::-webkit-scrollbar { height: 8px; }
+        #history-list::-webkit-scrollbar-thumb { background: #7ab8a0; border-radius: 4px; }
         
-        .history-item { background: white; border-radius: 8px; padding: 6px; border: 2px solid #334155; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .history-item img { width: 100%; height: auto; border-radius: 4px; display: block; object-fit: contain; background: white; }
+        .history-item { flex: 0 0 285px; background: #ffffff; border-radius: 10px; padding: 5px; border: 2px solid #9bd0ba; position: relative; box-shadow: 0 4px 10px rgba(23, 78, 74, 0.15); }
+        .history-item img { width: 100%; max-height: 145px; height: auto; border-radius: 4px; display: block; object-fit: contain; background: white; }
         .delete-snap { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); line-height: 24px; padding: 0; text-align: center; }
 
-        #calculator { flex: 0 0 auto; background: #1e293b; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 15px; display: flex; flex-direction: column; }
-        #calc-display { background: #0f172a; color: #10b981; font-family: monospace; font-size: 22px; padding: 12px; border-radius: 8px; margin-bottom: 15px; min-height: 70px; word-break: break-all; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
-        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .calc-key { background: #334155; border: none; color: white; border-radius: 6px; padding: 12px 0; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.1s; }
-        .calc-key:active { transform: scale(0.92); background: #475569; }
-        .calc-key.op { background: #3b82f6; }
-        .calc-key.eq { background: #10b981; grid-column: span 2; }
-        .calc-key.clear { background: #ef4444; }
-        .calc-key.backspace { background: #f59e0b; }
+        #calculator { flex: 0 0 auto; max-height: 405px; background: linear-gradient(180deg, #eefaff 0%, #dff5fd 100%); border: 2px solid #8ccbe2; border-radius: 16px; box-shadow: 0 8px 22px rgba(36, 91, 131, 0.12); padding: 12px; display: flex; flex-direction: column; }
+        #calc-display { background: #ffffff; color: #0f766e; font-family: monospace; font-size: 20px; padding: 8px 10px; border-radius: 10px; margin-bottom: 10px; min-height: 54px; word-break: break-all; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; box-shadow: inset 0 2px 5px rgba(36,91,131,0.14); border: 1px solid #b9ddf0; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+        .calc-key { background: #ffffff; border: 1px solid #b8dceb; color: #164e63; border-radius: 8px; padding: 8px 0; font-size: 17px; font-weight: bold; cursor: pointer; transition: 0.1s; box-shadow: 0 2px 0 rgba(255,255,255,0.4); }
+        .calc-key:active { transform: scale(0.92); background: #cfeeff; }
+        .calc-key.op { background: #ffd166; color: #704214; }
+        .calc-key.eq { background: #22c55e; color: white; grid-column: span 2; }
+        .calc-key.clear { background: #ff7a7a; color: white; }
+        .calc-key.backspace { background: #f6c453; color: #704214; }
+        #calculator .panel-title { color: #0f4c5c; background: rgba(255,255,255,0.58); border-radius: 999px; padding: 6px 10px; margin-bottom: 12px; }
+
+
+        #ai-panel { flex: 1 1 auto; min-height: 0; background: linear-gradient(180deg, #eef4ff 0%, #e7efff 100%); border: 2px solid #8fb3ff; border-radius: 16px; box-shadow: 0 8px 22px rgba(37, 99, 235, 0.12); padding: 14px; display: flex; flex-direction: column; overflow: hidden; }
+        #ai-chat { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; }
+        #ai-chat::-webkit-scrollbar { width: 5px; }
+        #ai-chat::-webkit-scrollbar-thumb { background: #8fb3ff; border-radius: 3px; }
+        .ai-msg { max-width: 94%; padding: 9px 11px; border-radius: 12px; font-size: 14px; line-height: 1.55; box-shadow: 0 2px 6px rgba(37,99,235,0.08); }
+        .ai-msg.bot { align-self: flex-start; background: #ffffff; color: #1e3a8a; border: 1px solid #c7d9ff; }
+        .ai-msg.student { align-self: flex-end; background: #2f6bff; color: #ffffff; }
+        #ai-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .ai-action-btn { border: none; border-radius: 10px; background: #2f6bff; color: white; padding: 10px 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .ai-action-btn.secondary { background: #ffffff; color: #2554b8; border: 1px solid #abc3ff; }
 
         #toast { position: absolute; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px); padding: 15px 30px; border-radius: 8px; font-size: 18px; font-weight: bold; pointer-events: none; opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 10px; color: white; }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -117,10 +130,6 @@
     </div>
 
     <div id="right-sidebar">
-        <div id="history-panel">
-            <div class="panel-title">📸 探究留痕对比区</div>
-            <div id="history-list"></div>
-        </div>
         <div id="calculator">
             <div class="panel-title">🧮 算理验证区</div>
             <div id="calc-display"></div>
@@ -150,6 +159,21 @@
                 <button class="calc-key eq" onclick="calcEval()">= 验证结果</button>
             </div>
         </div>
+        <div id="ai-panel">
+            <div class="panel-title">🤖 AI 智能对话区</div>
+            <div id="ai-chat">
+                <div class="ai-msg bot">同学你好！我会根据你的留痕作品，帮你追问方法、发现问题、整理研究成果。</div>
+            </div>
+            <div id="ai-actions">
+                <button class="ai-action-btn" onclick="analyzeResearchTrace()">分析留痕</button>
+                <button class="ai-action-btn secondary" onclick="askForHint()">给我提示</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="history-panel">
+        <div class="panel-title">📸 探究留痕对比区</div>
+        <div id="history-list"></div>
     </div>
 </div>
 
@@ -345,7 +369,57 @@
         itemDiv.appendChild(img); itemDiv.appendChild(delBtn);
         
         document.getElementById('history-list').prepend(itemDiv);
+        updateAISummary(formulaText, isCorrect, methodLabel);
         if (!formulaText) showToast("📸 探究成果已截图！", 'info');
+    }
+
+
+    function addAIMessage(text, role = 'bot') {
+        const chat = document.getElementById('ai-chat');
+        if (!chat) return;
+        const msg = document.createElement('div');
+        msg.className = 'ai-msg ' + role;
+        msg.innerText = text;
+        chat.appendChild(msg);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function updateAISummary(formulaText = null, isCorrect = false, methodLabel = null) {
+        const count = document.getElementById('history-list').children.length;
+        if (!formulaText) {
+            addAIMessage(`我看到你已经留下第${count}份探究记录。接下来可以比较：图形变了吗？面积有没有保持不变？`, 'bot');
+            return;
+        }
+        if (isCorrect) {
+            addAIMessage(`你的算式${formulaText}验证正确，并归纳为“${methodLabel}”。试着用一句话说明：这个方法为什么能把复杂图形转化成简单图形？`, 'bot');
+        } else {
+            addAIMessage(`我看到这次算式${formulaText}还没有通过。先别急，可以回到留痕图，比一比“多算了哪一块”或“漏算了哪一块”。`, 'bot');
+        }
+    }
+
+    function analyzeResearchTrace() {
+        const count = document.getElementById('history-list').children.length;
+        addAIMessage('请你帮我分析我的留痕成果。', 'student');
+        if (count === 0) {
+            addAIMessage('目前还没有留痕作品。你可以先完成一次割、补、移或倍拼，再点击“截图留痕”或用算理验证区留下研究记录。', 'bot');
+        } else if (flowerCount > 0) {
+            addAIMessage(`你已经形成${count}份留痕，并获得${flowerCount}朵小红花。你的研究可以这样表达：我通过观察边长和图形结构，把组合图形转化成几个熟悉的长方形，再用算式验证面积不变。`, 'bot');
+        } else {
+            addAIMessage(`你已经形成${count}份留痕。建议从三点检查：①辅助线是否只在图形内部；②分成的图形能否直接求面积；③算式中的每个数能否在图上找到依据。`, 'bot');
+        }
+    }
+
+    function askForHint() {
+        addAIMessage('我想要一个提示。', 'student');
+        if (currentTool === 'cut') {
+            addAIMessage('提示：割的时候，优先寻找“凹进去的角”，从这里画辅助线，常常能把组合图形分成两个长方形。', 'bot');
+        } else if (currentTool === 'fill') {
+            addAIMessage('提示：补的时候，先想象把缺口补成一个大长方形，再用“大面积－补上的小面积”。', 'bot');
+        } else if (currentTool === 'duplicate') {
+            addAIMessage('提示：倍拼后如果拼成了更规则的大图形，别忘了最后要除以2，回到原图形的面积。', 'bot');
+        } else {
+            addAIMessage('提示：先观察这个图形像不像“一个大长方形少了一块”，或者“两个小长方形拼在一起”。选定一种想法后，再去画线或计算。', 'bot');
+        }
     }
 
     function showDiagnosisHint() {
