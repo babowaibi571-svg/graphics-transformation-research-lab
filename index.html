@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>图形转化研究室</title>
+    <title>图形转换研究室2.0</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #dff2ec 0%, #eef7f3 38%, #fff4d8 100%); height: 100vh; display: flex; overflow: hidden; }
@@ -30,8 +30,12 @@
         svg { width: 100%; height: 100%; display: block; touch-action: none; cursor: default; }
         .shape-poly { cursor: grab; transition: filter 0.2s; }
         .shape-poly:active { cursor: grabbing; filter: brightness(0.95); }
+        #problem-panel { position: absolute; top: 14px; left: 16px; width: min(760px, calc(100% - 190px)); background: rgba(255,255,255,0.94); border: 2px solid #b7d9c9; border-radius: 14px; padding: 10px 16px; color: #174e4a; font-size: 15px; font-weight: 800; line-height: 1.55; text-align: left; box-shadow: 0 8px 18px rgba(23, 78, 74, 0.10); z-index: 90; pointer-events: none; display: none; }
+        #problem-panel.show { display: block; }
         
         #flower-board { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.9); border: 2px solid #fecdd3; border-radius: 20px; padding: 8px 16px; font-size: 16px; font-weight: bold; color: #be123c; box-shadow: 0 4px 10px rgba(225, 29, 72, 0.15); z-index: 100; display: flex; align-items: center; gap: 8px; }
+        #flower-board.variant-mode { top: 104px; }
+        #problem-panel.show ~ #toast { top: 112px; }
         .flower-icon { font-size: 20px; animation: pop 0.3s ease-out; }
         @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
         
@@ -42,13 +46,13 @@
         
         #history-panel { grid-column: 1 / 3; grid-row: 2; min-height: 0; background: linear-gradient(180deg, #e8f7f0 0%, #d9f0e7 100%); border: 2px solid #82c7ad; border-radius: 18px; box-shadow: 0 8px 22px rgba(23, 78, 74, 0.12); padding: 10px 18px 12px; display: flex; flex-direction: column; overflow: hidden; }
         .panel-title { color: #174e4a; font-size: 15px; font-weight: bold; margin-bottom: 8px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        #history-list { flex: 1; overflow-x: auto; overflow-y: hidden; display: flex; flex-direction: row; align-items: flex-start; gap: 12px; padding: 2px 6px 6px 2px; min-height: 0; }
-        #history-list::-webkit-scrollbar { height: 8px; }
-        #history-list::-webkit-scrollbar-thumb { background: #7ab8a0; border-radius: 4px; }
+        #history-list { flex: 1; overflow-x: auto; overflow-y: hidden; display: flex; flex-direction: row; align-items: stretch; gap: 16px; padding: 4px 8px 8px 4px; min-height: 0; }
+        #history-list::-webkit-scrollbar { height: 9px; }
+        #history-list::-webkit-scrollbar-thumb { background: #7ab8a0; border-radius: 5px; }
         
-        .history-item { flex: 0 0 285px; background: #ffffff; border-radius: 10px; padding: 5px; border: 2px solid #9bd0ba; position: relative; box-shadow: 0 4px 10px rgba(23, 78, 74, 0.15); }
-        .history-item img { width: 100%; max-height: 145px; height: auto; border-radius: 4px; display: block; object-fit: contain; background: white; }
-        .delete-snap { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); line-height: 24px; padding: 0; text-align: center; }
+        .history-item { flex: 0 0 360px; height: 166px; background: #ffffff; border-radius: 14px; padding: 8px; border: 2px solid #7fc6a9; position: relative; box-shadow: 0 6px 16px rgba(23, 78, 74, 0.18); display: flex; align-items: center; justify-content: center; }
+        .history-item img { width: 100%; height: 100%; border-radius: 8px; display: block; object-fit: contain; background: #ffffff; border: 1px solid #d7eee5; }
+        .delete-snap { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: none; width: 26px; height: 26px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); line-height: 26px; padding: 0; text-align: center; font-size: 16px; }
 
         #calculator { flex: 0 0 auto; max-height: 405px; background: linear-gradient(180deg, #eefaff 0%, #dff5fd 100%); border: 2px solid #8ccbe2; border-radius: 16px; box-shadow: 0 8px 22px rgba(36, 91, 131, 0.12); padding: 12px; display: flex; flex-direction: column; }
         #calc-display { background: #ffffff; color: #0f766e; font-family: monospace; font-size: 20px; padding: 8px 10px; border-radius: 10px; margin-bottom: 10px; min-height: 54px; word-break: break-all; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; box-shadow: inset 0 2px 5px rgba(36,91,131,0.14); border: 1px solid #b9ddf0; }
@@ -72,6 +76,10 @@
         #ai-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
         .ai-action-btn { border: none; border-radius: 10px; background: #2f6bff; color: white; padding: 10px 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
         .ai-action-btn.secondary { background: #ffffff; color: #2554b8; border: 1px solid #abc3ff; }
+        #stage-panel { flex: 0 0 auto; background: linear-gradient(180deg, #fff7ed 0%, #fffbeb 100%); border: 2px solid #f6c453; border-radius: 16px; box-shadow: 0 8px 22px rgba(180, 110, 20, 0.12); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .stage-title { color: #7c2d12; font-size: 14px; font-weight: 900; text-align: center; }
+        .stage-next-btn { width: 100%; border: none; border-radius: 12px; background: linear-gradient(135deg, #f97316, #22c55e); color: white; min-height: 48px; padding: 10px; font-size: 16px; font-weight: 1000; cursor: pointer; box-shadow: 0 8px 16px rgba(249, 115, 22, 0.20); }
+        .stage-next-btn:active { transform: scale(0.98); }
 
         #toast { position: absolute; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px); padding: 15px 30px; border-radius: 8px; font-size: 18px; font-weight: bold; pointer-events: none; opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 10px; color: white; }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -87,15 +95,101 @@
         .method-btn { padding: 18px 10px; border: 2px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-size: 18px; font-weight: bold; color: #334155; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
         .method-btn span { font-size: 13px; color: #64748b; font-weight: normal; }
         .method-btn:hover { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }
+
+
+        /* 组合图形选择弹窗 */
+        #choice-overlay { position: fixed; inset: 0; background: rgba(18,40,48,.42); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 2500; }
+        #choice-modal { width: min(1060px, 92vw); background: linear-gradient(180deg,#ffffff,#f7fbff); border-radius: 24px; border: 2px solid rgba(166,205,220,.85); box-shadow: 0 24px 70px rgba(20,50,58,.25); padding: 26px 30px 30px; }
+        .choice-modal-title { margin: 0; text-align: center; color: #183e44; font-size: 26px; font-weight: 1000; letter-spacing: .5px; }
+        .choice-modal-sub { text-align: center; margin: 8px 0 22px; color: #5c7480; font-size: 15px; font-weight: 700; }
+        .choice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+        .choice-card { background: #fff; border: 2px solid #d9e9ef; border-radius: 20px; padding: 18px; cursor: pointer; transition: .18s; box-shadow: 0 10px 24px rgba(33,83,98,.08); position: relative; overflow: hidden; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+        .choice-card:hover { transform: translateY(-4px); border-color: #4db783; box-shadow: 0 16px 34px rgba(48,138,103,.18); }
+        .choice-card:before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg,rgba(255,242,172,.36),rgba(216,243,255,.38)); opacity: .75; pointer-events: none; }
+        .choice-card>* { position: relative; }
+        .choice-title { font-size: 20px; font-weight: 1000; color: #183e44; margin-bottom: 4px; }
+        .choice-desc { font-size: 12px; line-height: 1.45; color: #637b84; min-height: 54px; margin-bottom: 8px; }
+        .mini-svg-wrap { height: 180px; margin: 8px 0 12px; border-radius: 14px; background: linear-gradient(0deg,#ffffff,#f7fbff); border: 1px solid #dcebf2; display: flex; align-items: center; justify-content: center; align-self: center; }
+        .choice-meta { display: flex; flex-wrap: wrap; gap: 7px; }
+        .tag { font-size: 12px; background: #e8f9ef; color: #09895d; font-weight: 900; padding: 5px 9px; border-radius: 999px; }
+        .tag.blue { background: #e8f1ff; color: #2c65ce; }
+        .tag.orange { background: #fff2cf; color: #b56c00; }
+        .start-btn { margin-top: 14px; height: 42px; border-radius: 12px; background: #49b77d; color: white; border: none; width: 100%; font-weight: 1000; font-size: 15px; cursor: pointer; }
+        .choice-card:hover .start-btn { background: #2e9e67; }
+        .mini-label, .shape-label { fill: #d22e2e; font-weight: 1000; text-anchor: middle; dominant-baseline: central; }
+        .mini-label { font-size: 11.5px; paint-order: stroke fill; stroke: rgba(255,255,255,0.92); stroke-width: 4px; stroke-linejoin: round; }
+        .shape-label { font-size: 17px; }
+        .mini-guide { stroke: #64748b; stroke-width: 2; stroke-dasharray: 5,5; opacity: .75; }
+
+        @media (max-width: 1180px), (max-height: 820px) {
+            #app-container { grid-template-columns: 160px minmax(0, 1fr) 280px; grid-template-rows: minmax(0, 1fr) 126px; padding: 10px; gap: 10px; }
+            #toolbar { grid-row: 1 / 3; width: 160px; padding: 12px; gap: 8px; border-radius: 14px; }
+            .logo-title { font-size: 15px; margin-bottom: 2px; }
+            .legend { padding: 7px; margin-bottom: 2px; }
+            .legend-box { width: 15px; height: 15px; }
+            .tool-btn { padding: 9px 8px; font-size: 12.5px; gap: 6px; border-radius: 7px; }
+            #canvas-container { border-radius: 14px; }
+            #problem-panel { top: 10px; left: 12px; width: calc(100% - 154px); padding: 8px 12px; font-size: 12.5px; line-height: 1.42; border-radius: 12px; }
+            #flower-board { top: 12px; right: 12px; padding: 6px 12px; font-size: 14px; }
+            #flower-board.variant-mode { top: 96px; }
+            #problem-panel.show ~ #toast { top: 106px; }
+            #right-sidebar { width: 280px; gap: 8px; }
+            #history-panel { grid-column: 2; grid-row: 2; padding: 8px 12px 10px; border-radius: 14px; }
+            #history-list { gap: 10px; padding: 2px 4px 5px 2px; }
+            .history-item { flex-basis: 250px; height: 122px; padding: 6px; border-radius: 10px; }
+            #calculator { padding: 9px; max-height: 318px; border-radius: 14px; }
+            #calculator .panel-title { padding: 5px 8px; margin-bottom: 8px; }
+            #calc-display { min-height: 44px; font-size: 17px; padding: 6px 8px; margin-bottom: 7px; border-radius: 8px; }
+            .calc-grid { gap: 5px; }
+            .calc-key { padding: 7px 0; font-size: 15px; border-radius: 7px; }
+            #ai-panel { padding: 10px; border-radius: 14px; }
+            .panel-title { font-size: 13px; margin-bottom: 6px; }
+            #ai-chat { gap: 6px; }
+            .ai-msg { font-size: 12.5px; line-height: 1.45; padding: 7px 9px; border-radius: 10px; }
+            #ai-actions { gap: 6px; margin-top: 6px; }
+            .ai-action-btn { padding: 8px 5px; font-size: 12px; border-radius: 8px; }
+            #stage-panel { padding: 8px; gap: 6px; border-radius: 14px; }
+            .stage-title { font-size: 12.5px; }
+            .stage-next-btn { min-height: 40px; padding: 8px; font-size: 14px; border-radius: 10px; }
+            #toast { font-size: 15px; padding: 12px 20px; }
+            #choice-modal { width: calc(100vw - 36px); max-height: calc(100vh - 36px); overflow: auto; border-radius: 18px; padding: 18px; }
+            .choice-modal-title { font-size: 22px; }
+            .choice-modal-sub { font-size: 13px; margin: 6px 0 14px; }
+            .choice-grid { gap: 12px; }
+            .choice-card { padding: 12px; border-radius: 16px; }
+            .choice-title { font-size: 17px; }
+            .choice-desc { font-size: 10.5px; min-height: 62px; margin-bottom: 6px; }
+            .mini-svg-wrap { height: 118px; margin: 6px 0 8px; border-radius: 12px; }
+            .tag { font-size: 10.5px; padding: 4px 7px; }
+            .start-btn { height: 36px; margin-top: 9px; font-size: 13px; border-radius: 10px; }
+        }
+
+        @media (max-width: 900px) {
+            #app-container { grid-template-columns: 148px minmax(0, 1fr) 260px; padding: 8px; gap: 8px; }
+            #toolbar { width: 148px; padding: 10px; gap: 7px; }
+            .tool-btn { padding: 8px 6px; font-size: 11.5px; }
+            #right-sidebar { width: 260px; gap: 7px; }
+            .calc-key { font-size: 14px; padding: 6px 0; }
+            .ai-msg { font-size: 12px; }
+            #choice-modal { width: calc(100vw - 24px); padding: 14px; }
+            .choice-grid { gap: 8px; }
+            .choice-card { padding: 10px; }
+            .choice-title { font-size: 15px; }
+            #problem-panel { width: calc(100% - 132px); font-size: 11.5px; }
+            .choice-desc { font-size: 9.5px; min-height: 66px; }
+            .mini-svg-wrap { height: 108px; }
+            .start-btn { height: 34px; font-size: 12px; }
+        }
+
     </style>
 </head>
 <body>
 
 <div id="app-container">
     <div id="toolbar">
-        <div class="logo-title">📐图形转化研究室</div>
+        <div class="logo-title">📐图形转换研究室2.0</div>
         <div class="legend">
-            <div class="legend-box"></div><span style="font-size: 12px; color: #475569; font-weight: bold;">= 1 m² (单位)</span>
+            <div class="legend-box"></div><span style="font-size: 12px; color: #475569; font-weight: bold;">= 1 cm²（单位）</span>
         </div>
 
         <button class="tool-btn active" id="btn-drag" onclick="setTool('drag')">🤚 拖拽与移动</button>
@@ -108,20 +202,25 @@
         
         <button class="tool-btn toggle-btn" id="btn-grid" onclick="toggleGrid()">🔲 隐藏底板网格</button>
         
+        <button class="tool-btn toggle-btn" id="btn-choice" onclick="openChoiceModal()">🧭 更换变式图形</button>
         <button class="tool-btn reset-btn" onclick="initShapes()">♻️ 重置探究素材</button>
     </div>
 
     <div id="canvas-container">
         <div id="flower-board">🌸 获得红花: <span id="flower-count">0</span> 朵</div>
+        <div id="problem-panel"></div>
 
         <svg id="svg-canvas" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+                    <!-- 浅线：0.5cm 网格交点；深线：1cm 单位格，便于半厘米顶点也严格落在网格点上 -->
+                    <path d="M 20 0 L 20 40 M 0 20 L 40 20" fill="none" stroke="#edf2f7" stroke-width="1"/>
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#dbe5ee" stroke-width="1.25"/>
                 </pattern>
             </defs>
             <rect id="grid-rect" width="100%" height="100%" fill="url(#grid)" />
             <g id="render-layer"></g>
+            <g id="guide-layer"></g>
             <line id="preview-line" stroke="#ef4444" stroke-width="3" stroke-dasharray="6,6" display="none" />
             <polygon id="preview-rect" fill="rgba(156, 39, 176, 0.2)" stroke="#9c27b0" stroke-width="3" stroke-dasharray="6,6" display="none" />
             <g id="diagnosis-layer"></g>
@@ -162,18 +261,31 @@
         <div id="ai-panel">
             <div class="panel-title">🤖 AI 智能对话区</div>
             <div id="ai-chat">
-                <div class="ai-msg bot">同学你好！我会根据你的留痕作品，帮你追问方法、发现问题、整理研究成果。</div>
+                <div class="ai-msg bot">同学你好！我们先从基础例图出发，发现图形转化的方法，再把方法迁移到变式图形中。</div>
             </div>
             <div id="ai-actions">
                 <button class="ai-action-btn" onclick="analyzeResearchTrace()">分析留痕</button>
                 <button class="ai-action-btn secondary" onclick="askForHint()">给我提示</button>
             </div>
         </div>
+        <div id="stage-panel">
+            <div class="stage-title" id="stage-title">第一关：基础例图探索</div>
+            <button class="stage-next-btn" id="stage-next-btn" onclick="toggleStage()">进入下一关：变式探究</button>
+        </div>
     </div>
 
     <div id="history-panel">
         <div class="panel-title">📸 探究留痕对比区</div>
         <div id="history-list"></div>
+    </div>
+</div>
+
+
+<div id="choice-overlay">
+    <div id="choice-modal">
+        <h2 class="choice-modal-title">请选择一道变式练习</h2>
+        <div class="choice-modal-sub">先阅读题干、观察图形形状，再进入研究页面独立选择合适的转化方法。</div>
+        <div class="choice-grid" id="choice-grid"></div>
     </div>
 </div>
 
@@ -203,9 +315,11 @@
 </div>
 
 <script>
-    const UNIT = 40; 
+    const UNIT = 40;        // 1cm 对应 40px
+    const SNAP = 20;        // 操作吸附到 0.5cm 网格点，保证小屋顶点等半厘米位置也能精准落点
     const svg = document.getElementById('svg-canvas');
     const renderLayer = document.getElementById('render-layer');
+    const guideLayer = document.getElementById('guide-layer');
     const diagLayer = document.getElementById('diagnosis-layer');
     const toast = document.getElementById('toast');
     
@@ -216,6 +330,7 @@
     let targetArea = 0; 
     let pendingFormula = ""; 
     let flowerCount = 0; 
+    let guideLines = [];
     
     // 【核心新增】：黄金分割色相生成器，保证每次生成的颜色都绝对不同且舒适
     let hueSeed = 210; 
@@ -224,26 +339,262 @@
         return `hsl(${hueSeed}, 75%, 85%)`;
     }
 
-    const OFFSET_X = 160; const OFFSET_Y = 120;
-    const BASE_L_PTS = [
-        {x:0, y:0}, {x:4, y:0}, {x:4, y:3}, 
-        {x:7, y:3}, {x:7, y:6}, {x:0, y:6}
-    ].map(p => ({ x: p.x * UNIT + OFFSET_X, y: p.y * UNIT + OFFSET_Y }));
+    const OFFSET_X = 160; const OFFSET_Y = 110;
+    let currentStage = 'basic';
+    let currentShapeIndex = null;
+    let currentShapeData = null;
 
-    const INIT_LABELS = [
-        { x: 2 * UNIT + OFFSET_X, y: 0 * UNIT + OFFSET_Y - 20, text: '4m' },
-        { x: 3.5 * UNIT + OFFSET_X, y: 6 * UNIT + OFFSET_Y + 20, text: '7m' },
-        { x: 0 * UNIT + OFFSET_X - 22, y: 3 * UNIT + OFFSET_Y, text: '6m' },
-        { x: 7 * UNIT + OFFSET_X + 22, y: 4.5 * UNIT + OFFSET_Y, text: '3m' }
+    const BASIC_SHAPE_DATA = {
+        id: 'basic-l-shape',
+        title: '基础例图',
+        desc: '先从一个标准的L形组合图形出发，尝试用割法、补法、移法或倍拼法发现面积不变的转化思想。',
+        pts: [[0,6],[4,6],[4,3],[7,3],[7,0],[0,0]],
+        labels: [
+            {x:2,y:6.55,text:'4 cm'},
+            {x:3.5,y:-0.55,text:'7 cm'},
+            {x:-0.85,y:3,text:'6 cm',rotate:-90},
+            {x:7.85,y:1.5,text:'3 cm',rotate:-90}
+        ],
+        guides: [],
+        hints: {
+            cut: '可以从凹进去的角画一条水平或竖直辅助线，把组合图形分成两个长方形。',
+            fill: '也可以先补成一个7×6的大长方形，再减去右上角缺少的3×3小长方形。',
+            duplicate: '倍拼能帮助你观察面积不变，但最后要回到一个原图形的面积。',
+            default: '先把复杂图形想成“两个长方形拼成”或“一个大长方形少了一块”。'
+        },
+        diagnosis: '再核对一下：基础例图可以分成4×6和3×3两个长方形，或用7×6减去3×3。'
+    };
+
+    const SHAPE_LIBRARY = [
+        {
+            id: 'slope-combo',
+            title: '斜边组合图形',
+            desc: '左高10cm、右高5cm、底边12cm，上方水平段6cm，可沿5cm高度横向分割成熟悉图形。',
+            problem: '一块组合图形区域，左边高10 cm，右边高5 cm，底边长12 cm，上方水平边长6 cm。请你求出这块区域的面积。',
+            pts: [[0,10],[6,5],[12,5],[12,0],[0,0]],
+            labels: [
+                {x:6,y:-1.25,text:'12 cm',miniDy:7},
+                {x:-1.45,y:5,text:'10 cm',rotate:-90,miniDx:-6},
+                {x:13.45,y:2.5,text:'5 cm',rotate:-90,miniDx:8},
+                {x:9,y:6.15,text:'6 cm',miniDy:-7}
+            ],
+            guides: [{x1:0,y1:5,x2:6,y2:5}],
+            tags: ['斜边','割补','三角形+长方形'],
+            hints: {
+                cut: '可以从左边5cm高的位置横向连到斜边与水平边的交点，把图形分成一个12×5的长方形和一个直角三角形。',
+                fill: '也可以先想象补成12×10的大长方形，再观察右上方多出的部分应该怎样减去。',
+                default: '先找“左右高度差”：10cm和5cm相差5cm，这个5cm正好是斜边上方三角形的高。'
+            },
+            diagnosis: '再核对一下：这个图形可以看成12×5的长方形，再加上底6cm、高5cm的直角三角形。'
+        },
+        {
+            id: 'house-combo',
+            title: '小屋组合图形',
+            desc: '下方是5cm×5cm的正方形，上方是高2cm的三角形屋顶，适合“长方形+三角形”分解。',
+            problem: '一个小屋形图案，下方是边长5 cm的正方形，上方屋顶是底边5 cm、高2 cm的三角形。请你求出这个图案的面积。',
+            pts: [[0,0],[5,0],[5,5],[2.5,7],[0,5]],
+            labels: [
+                {x:2.5,y:-1.1,text:'5 cm',miniDy:7},
+                {x:6.35,y:2.5,text:'5 cm',rotate:-90,miniDx:8},
+                {x:3.25,y:6,text:'2 cm',miniDx:8,miniDy:2}
+            ],
+            guides: [{x1:0,y1:5,x2:5,y2:5},{x1:2.5,y1:7,x2:2.5,y2:5}],
+            tags: ['正方形','三角形','分块求和'],
+            hints: {
+                cut: '可以沿屋顶底边画一条水平辅助线，下方是5×5的正方形，上方是底5cm、高2cm的三角形。',
+                fill: '如果用补法，先想屋顶三角形和一个同样的三角形能拼成什么熟悉图形。',
+                default: '注意2cm表示屋顶的竖直高度，不是屋顶斜边的长度。'
+            },
+            diagnosis: '再看清2cm的位置：它是屋顶三角形的高；小屋面积是正方形面积加三角形面积。'
+        },
+        {
+            id: 'team-flag',
+            title: '队旗组合图形',
+            desc: '底边8cm，右侧被挖进2cm，上下各3cm，适合用“补成长方形再减三角形”。',
+            problem: '一面队旗组合图形，左边到右侧顶点的水平距离是8 cm，右侧上、下两段竖直边各3 cm，向内凹进2 cm。请你求出这面队旗的面积。',
+            pts: [[0,0],[8,0],[6,3],[8,6],[0,6]],
+            labels: [
+                {x:4,y:-1.15,text:'8 cm',miniDy:7},
+                {x:9.35,y:1.5,text:'3 cm',rotate:-90,miniDx:9},
+                {x:9.35,y:4.5,text:'3 cm',rotate:-90,miniDx:9},
+                {x:7,y:3.45,text:'2 cm',miniDx:-18,miniDy:-12}
+            ],
+            guides: [{x1:8,y1:0,x2:8,y2:6},{x1:6,y1:3,x2:8,y2:3}],
+            tags: ['队旗','补法','差的思想'],
+            hints: {
+                cut: '这个图形不一定要硬割，先找右侧凹进去的三角形，会更容易计算。',
+                fill: '可以补成8×6的大长方形，再减去右侧底为6cm、高为2cm的三角形。',
+                default: '上下两个3cm合起来是6cm，2cm表示凹进去的水平深度。'
+            },
+            diagnosis: '再核对一下：队旗组合图形可以先看成长方形，再减去右侧底6cm、高2cm的三角形。'
+        }
     ];
 
+    function getBounds(data) {
+        const xs = data.pts.map(p => p[0]);
+        const ys = data.pts.map(p => p[1]);
+        return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
+    }
+
+    function cmToCanvasPoint(x, y, offsetX, offsetY, maxY) {
+        return { x: offsetX + x * UNIT, y: offsetY + (maxY - y) * UNIT };
+    }
+
+    function getCenteredCanvasData(data) {
+        const bounds = getBounds(data);
+        const width = (bounds.maxX - bounds.minX) * UNIT;
+        const height = (bounds.maxY - bounds.minY) * UNIT;
+        const canvasBox = document.getElementById('canvas-container').getBoundingClientRect();
+        const extraLeft = Math.max(90, Math.min(180, canvasBox.width * 0.15));
+        const compactVariant = currentStage === 'variant' && canvasBox.width < width + 180;
+        const rawOffsetX = (compactVariant ? Math.max(20, (canvasBox.width - width) / 2) : Math.max(70, (canvasBox.width - width) / 2) - extraLeft * 0.18) - bounds.minX * UNIT;
+        const problemOffset = currentStage === 'variant' ? 92 : 0;
+        const availableHeight = Math.max(180, canvasBox.height - problemOffset);
+        const rawOffsetY = currentStage === 'variant'
+            ? problemOffset + Math.max(10, (availableHeight - height) / 2) - bounds.minY * UNIT
+            : Math.max(65, (canvasBox.height - height) / 2) - bounds.minY * UNIT - 10;
+        // 关键：初始图形整体偏移也必须吸附到网格，保证所有顶点一打开就落在网格交点上
+        const offsetX = Math.round(rawOffsetX / SNAP) * SNAP;
+        const offsetY = Math.round(rawOffsetY / SNAP) * SNAP;
+        const pts = data.pts.map(([x,y]) => cmToCanvasPoint(x, y, offsetX, offsetY, bounds.maxY));
+        const labels = data.labels.map(l => {
+            const p = cmToCanvasPoint(l.x, l.y, offsetX, offsetY, bounds.maxY);
+            return { x: p.x, y: p.y, text: l.text, rotate: l.rotate || 0 };
+        });
+        const guides = data.guides.map(g => {
+            const p1 = cmToCanvasPoint(g.x1, g.y1, offsetX, offsetY, bounds.maxY);
+            const p2 = cmToCanvasPoint(g.x2, g.y2, offsetX, offsetY, bounds.maxY);
+            return { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y };
+        });
+        return { pts, labels, guides };
+    }
+
     function initShapes() {
+        if (currentStage === 'variant' && currentShapeIndex === null) {
+            openChoiceModal();
+            return;
+        }
         shapes = []; shapeIdCounter = 0; clearDiagnosis();
-        hueSeed = 210; // 重置图形时，色相种子也重置
-        createShape(BASE_L_PTS, '#cbd5e1', false, JSON.parse(JSON.stringify(INIT_LABELS)));
-        targetArea = Math.round(calcPolygonArea(BASE_L_PTS) / (UNIT * UNIT));
+        hueSeed = 210;
+        const data = currentStage === 'basic' ? BASIC_SHAPE_DATA : SHAPE_LIBRARY[currentShapeIndex];
+        currentShapeData = data;
+        const canvasData = getCenteredCanvasData(data);
+        guideLines = currentStage === 'basic' ? canvasData.guides : [];
+        const initialLabels = currentStage === 'basic' ? JSON.parse(JSON.stringify(canvasData.labels)) : [];
+        createShape(canvasData.pts, '#cbd5e1', false, initialLabels);
+        targetArea = roundToTwo(calcPolygonArea(canvasData.pts) / (UNIT * UNIT));
+        calcExpression = "";
+        displayEl.innerText = "";
         setTool('drag');
-        showToast("已恢复带数据的初始组合图形！", 'info');
+        updateStageControls();
+        updateProblemPanel();
+        if (currentStage === 'variant') {
+            clearTimeout(toastTimeout);
+            toast.classList.remove('show');
+        }
+        if (currentStage === 'basic') {
+            addAIMessage('第一关已准备好。先用基础例图尝试不同转化方法，想清楚“为什么面积不变”，再进入下一关迁移应用。', 'bot');
+        } else {
+            addAIMessage(`你选择的是“${data.title}”。请先阅读题干条件，再独立选择一种转化方法完成探究。`, 'bot');
+        }
+        if (currentStage === 'basic') {
+            showToast(`已恢复“${data.title}”的初始组合图形！`, 'info');
+        }
+    }
+
+    function selectShape(index) {
+        currentStage = 'variant';
+        currentShapeIndex = index;
+        currentShapeData = SHAPE_LIBRARY[index];
+        document.getElementById('choice-overlay').style.display = 'none';
+        initShapes();
+    }
+
+    function openChoiceModal() {
+        currentStage = 'variant';
+        updateStageControls();
+        document.getElementById('choice-overlay').style.display = 'flex';
+    }
+
+    function toggleStage() {
+        if (currentStage === 'basic') {
+            currentStage = 'variant';
+            addAIMessage('我已经掌握了基础方法，准备进入变式探究。', 'student');
+            openChoiceModal();
+        } else {
+            currentStage = 'basic';
+            currentShapeIndex = null;
+            document.getElementById('choice-overlay').style.display = 'none';
+            addAIMessage('我想回到基础例图再整理方法。', 'student');
+            initShapes();
+        }
+    }
+
+    function updateStageControls() {
+        const choiceBtn = document.getElementById('btn-choice');
+        const stageTitle = document.getElementById('stage-title');
+        const stageBtn = document.getElementById('stage-next-btn');
+        const flowerBoard = document.getElementById('flower-board');
+        if (choiceBtn) choiceBtn.style.display = currentStage === 'variant' ? 'flex' : 'none';
+        if (stageTitle) stageTitle.innerText = currentStage === 'basic' ? '第一关：基础例图探索' : '第二关：变式迁移应用';
+        if (stageBtn) stageBtn.innerText = currentStage === 'basic' ? '进入下一关：变式探究' : '回到第一关：整理方法';
+        if (flowerBoard) flowerBoard.classList.toggle('variant-mode', currentStage === 'variant');
+    }
+
+    function updateProblemPanel() {
+        const panel = document.getElementById('problem-panel');
+        if (!panel) return;
+        if (currentStage === 'variant' && currentShapeData && currentShapeData.problem) {
+            panel.innerText = currentShapeData.problem;
+            panel.classList.add('show');
+        } else {
+            panel.innerText = '';
+            panel.classList.remove('show');
+        }
+    }
+
+    function makeSvg(tag, attrs={}) {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k, v));
+        return el;
+    }
+
+    function appendMiniLabel(parent, x, y, text, rotate=0) {
+        const g = makeSvg('g');
+        if (rotate) g.setAttribute('transform', `rotate(${rotate} ${x} ${y})`);
+        const t = makeSvg('text', { x, y, class: 'mini-label' });
+        t.textContent = text;
+        g.appendChild(t);
+        parent.appendChild(g);
+    }
+
+    function makeMiniSvg(data) {
+        const svgMini = makeSvg('svg', { width: '300', height: '190', viewBox: '0 0 300 190' });
+        const b = getBounds(data);
+        const shapeW = b.maxX - b.minX;
+        const shapeH = b.maxY - b.minY;
+        const scale = Math.min(220 / shapeW, 130 / shapeH);
+        const scaledW = shapeW * scale;
+        const scaledH = shapeH * scale;
+        const ox = (300 - scaledW) / 2;
+        const oy = (190 + scaledH) / 2;
+        const toMini = (x,y) => ({ x: ox + (x - b.minX) * scale, y: oy - (y - b.minY) * scale });
+        const pts = data.pts.map(([x,y]) => { const p = toMini(x,y); return `${p.x},${p.y}`; }).join(' ');
+        svgMini.appendChild(makeSvg('polygon', { points: pts, fill: '#d5e0e7', stroke: '#2f3d51', 'stroke-width': '3', 'stroke-linejoin': 'round' }));
+        return svgMini;
+    }
+
+    function renderChoiceCards() {
+        const grid = document.getElementById('choice-grid');
+        grid.innerHTML = '';
+        SHAPE_LIBRARY.forEach((data, idx) => {
+            const card = document.createElement('div');
+            card.className = 'choice-card';
+            card.onclick = () => selectShape(idx);
+            card.innerHTML = `<div class="choice-title">${idx + 1}. ${data.title}</div><div class="choice-desc">${data.problem}</div><div class="mini-svg-wrap"></div><button class="start-btn">选择这个图形</button>`;
+            card.querySelector('.mini-svg-wrap').appendChild(makeMiniSvg(data));
+            grid.appendChild(card);
+        });
     }
 
     function createShape(pts, color, isVirtual, initialLabels = []) {
@@ -253,6 +604,7 @@
 
     function render() {
         renderLayer.innerHTML = '';
+        guideLayer.innerHTML = '';
         shapes.forEach((shape) => {
             const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             g.setAttribute('class', 'shape-poly');
@@ -268,20 +620,45 @@
             g.appendChild(poly);
 
             shape.labels.forEach(label => {
+                const labelGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                if (label.rotate) labelGroup.setAttribute('transform', `rotate(${label.rotate} ${label.x} ${label.y})`);
+                const bgWidth = Math.max(44, label.text.length * 10 + 14);
                 const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                bg.setAttribute('x', label.x - 18); bg.setAttribute('y', label.y - 12);
-                bg.setAttribute('width', 36); bg.setAttribute('height', 24);
-                bg.setAttribute('fill', 'rgba(255,255,255,0.85)'); bg.setAttribute('rx', '4');
-                g.appendChild(bg);
+                bg.setAttribute('x', label.x - bgWidth / 2); bg.setAttribute('y', label.y - 14);
+                bg.setAttribute('width', bgWidth); bg.setAttribute('height', 28);
+                bg.setAttribute('fill', 'rgba(255,255,255,0.88)'); bg.setAttribute('rx', '5');
+                bg.setAttribute('stroke', 'rgba(220,38,38,0.16)'); bg.setAttribute('stroke-width', '1');
+                labelGroup.appendChild(bg);
                 const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 text.setAttribute('x', label.x); text.setAttribute('y', label.y + 1);
-                text.setAttribute('font-size', '16px'); text.setAttribute('font-weight', 'bold');
+                text.setAttribute('font-size', '17px'); text.setAttribute('font-weight', 'bold');
                 text.setAttribute('fill', '#dc2626'); text.setAttribute('text-anchor', 'middle');
                 text.setAttribute('dominant-baseline', 'central'); text.textContent = label.text;
-                g.appendChild(text);
+                labelGroup.appendChild(text);
+                g.appendChild(labelGroup);
             });
             renderLayer.appendChild(g);
         });
+        renderGuides();
+    }
+
+    function renderGuides() {
+        if (!shouldShowGuides()) return;
+        guideLines.forEach(line => {
+            const guide = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            guide.setAttribute('x1', line.x1); guide.setAttribute('y1', line.y1);
+            guide.setAttribute('x2', line.x2); guide.setAttribute('y2', line.y2);
+            guide.setAttribute('stroke', '#475569');
+            guide.setAttribute('stroke-width', '2.5');
+            guide.setAttribute('stroke-dasharray', '8,7');
+            guide.setAttribute('opacity', '0.62');
+            guide.setAttribute('pointer-events', 'none');
+            guideLayer.appendChild(guide);
+        });
+    }
+
+    function shouldShowGuides() {
+        return guideLines.length > 0 && shapes.length === 1 && shapes[0] && !shapes[0].isVirtual;
     }
 
     function toggleGrid() {
@@ -298,6 +675,9 @@
         const allPts = [];
         shapes.forEach(s => s.pts.forEach(p => allPts.push(p)));
         shapes.forEach(s => s.labels.forEach(l => { allPts.push({x: l.x-30, y: l.y-20}); allPts.push({x: l.x+30, y: l.y+20}); }));
+        if (shouldShowGuides()) {
+            guideLines.forEach(l => { allPts.push({x: l.x1, y: l.y1}); allPts.push({x: l.x2, y: l.y2}); });
+        }
         
         if(diagLayer.innerHTML !== '') {
             allPts.push({x: OFFSET_X, y: OFFSET_Y});
@@ -317,39 +697,110 @@
         const prevR = clone.querySelector('#preview-rect'); if(prevR) prevR.remove();
 
         if (formulaText) {
-            const oldMaxX = maxX - padding; 
+            const oldMaxX = maxX - padding;
+            const centerY = (minY + maxY) / 2;
+            const panelX = oldMaxX + 34;
+            const panelY = centerY - 120;
+            const panelW = 270;
+            const panelH = 240;
             const textGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            
-            const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            textEl.setAttribute('x', oldMaxX + 50); textEl.setAttribute('y', (minY + maxY) / 2 - 20);
-            textEl.setAttribute('font-size', '24px'); textEl.setAttribute('font-weight', 'bold');
-            textEl.setAttribute('fill', '#1e293b'); textEl.textContent = formulaText;
-            textGroup.appendChild(textEl);
-            
-            const stampColor = isCorrect ? '#10b981' : '#ef4444';
-            const stampText = isCorrect ? "✅ 正确！" : "❌ 错误";
-            const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            box.setAttribute('x', oldMaxX + 50); box.setAttribute('y', (minY + maxY) / 2 + 10);
-            box.setAttribute('width', 120); box.setAttribute('height', 44);
-            box.setAttribute('fill', 'none'); box.setAttribute('stroke', stampColor); box.setAttribute('stroke-width', '4');
-            const badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            badge.setAttribute('x', oldMaxX + 110); badge.setAttribute('y', (minY + maxY) / 2 + 40);
-            badge.setAttribute('font-size', '24px'); badge.setAttribute('font-weight', 'bold');
-            badge.setAttribute('fill', stampColor); badge.setAttribute('text-anchor', 'middle'); badge.textContent = stampText;
-            textGroup.appendChild(box); textGroup.appendChild(badge);
 
-            if (methodLabel) {
-                const methodBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                methodBg.setAttribute('x', oldMaxX + 50); methodBg.setAttribute('y', (minY + maxY) / 2 - 80);
-                methodBg.setAttribute('width', 130); methodBg.setAttribute('height', 36);
-                methodBg.setAttribute('fill', '#3b82f6'); methodBg.setAttribute('rx', '18');
-                const mText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                mText.setAttribute('x', oldMaxX + 115); mText.setAttribute('y', (minY + maxY) / 2 - 55);
-                mText.setAttribute('font-size', '16px'); mText.setAttribute('font-weight', 'bold');
-                mText.setAttribute('fill', 'white'); mText.setAttribute('text-anchor', 'middle'); mText.textContent = `💡 ${methodLabel}`;
-                textGroup.appendChild(methodBg); textGroup.appendChild(mText);
-            }
-            clone.appendChild(textGroup); maxX += 300; 
+            const methodTips = {
+                '割法': '化繁为简，分块求和',
+                '补法': '添补成整，整体求差',
+                '移法': '割补平移，面积不变',
+                '倍拼法': '旋转拼组，先倍后半'
+            };
+            const methodIcons = {
+                '割法': '✂️',
+                '补法': '🔲',
+                '移法': '🤚',
+                '倍拼法': '🧩'
+            };
+            const methodText = methodLabel || (isCorrect ? '已验证' : '待修正');
+            const methodTip = methodTips[methodLabel] || (isCorrect ? '方法已归纳，过程可回看' : '请重新检查算式与图形');
+            const methodIcon = methodIcons[methodLabel] || (isCorrect ? '✅' : '💡');
+            const mainColor = isCorrect ? '#2563eb' : '#f59e0b';
+            const deepColor = isCorrect ? '#1d4ed8' : '#b45309';
+            const stampColor = isCorrect ? '#16a34a' : '#dc2626';
+
+            const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            shadow.setAttribute('x', panelX + 5); shadow.setAttribute('y', panelY + 6);
+            shadow.setAttribute('width', panelW); shadow.setAttribute('height', panelH);
+            shadow.setAttribute('fill', 'rgba(15, 23, 42, 0.12)'); shadow.setAttribute('rx', '18');
+            textGroup.appendChild(shadow);
+
+            const panel = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            panel.setAttribute('x', panelX); panel.setAttribute('y', panelY);
+            panel.setAttribute('width', panelW); panel.setAttribute('height', panelH);
+            panel.setAttribute('fill', '#ffffff'); panel.setAttribute('stroke', '#93c5fd');
+            panel.setAttribute('stroke-width', '3'); panel.setAttribute('rx', '18');
+            textGroup.appendChild(panel);
+
+            const topBar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            topBar.setAttribute('x', panelX + 18); topBar.setAttribute('y', panelY + 18);
+            topBar.setAttribute('width', panelW - 36); topBar.setAttribute('height', '62');
+            topBar.setAttribute('fill', mainColor); topBar.setAttribute('rx', '20');
+            textGroup.appendChild(topBar);
+
+            const iconText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            iconText.setAttribute('x', panelX + 46); iconText.setAttribute('y', panelY + 58);
+            iconText.setAttribute('font-size', '27px'); iconText.setAttribute('font-weight', '900');
+            iconText.setAttribute('fill', '#ffffff'); iconText.setAttribute('text-anchor', 'middle');
+            iconText.textContent = methodIcon;
+            textGroup.appendChild(iconText);
+
+            const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            title.setAttribute('x', panelX + panelW / 2 + 16); title.setAttribute('y', panelY + 57);
+            title.setAttribute('font-size', methodLabel ? '36px' : '34px'); title.setAttribute('font-weight', '900');
+            title.setAttribute('fill', '#ffffff'); title.setAttribute('text-anchor', 'middle');
+            title.textContent = methodText;
+            textGroup.appendChild(title);
+
+            const tipBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            tipBg.setAttribute('x', panelX + 18); tipBg.setAttribute('y', panelY + 91);
+            tipBg.setAttribute('width', panelW - 36); tipBg.setAttribute('height', '34');
+            tipBg.setAttribute('fill', '#eff6ff'); tipBg.setAttribute('stroke', '#bfdbfe');
+            tipBg.setAttribute('stroke-width', '1.5'); tipBg.setAttribute('rx', '12');
+            textGroup.appendChild(tipBg);
+
+            const tipText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            tipText.setAttribute('x', panelX + panelW / 2); tipText.setAttribute('y', panelY + 114);
+            tipText.setAttribute('font-size', '20px'); tipText.setAttribute('font-weight', '800');
+            tipText.setAttribute('fill', deepColor); tipText.setAttribute('text-anchor', 'middle');
+            tipText.textContent = methodTip;
+            textGroup.appendChild(tipText);
+
+            const formulaBox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            formulaBox.setAttribute('x', panelX + 18); formulaBox.setAttribute('y', panelY + 139);
+            formulaBox.setAttribute('width', panelW - 36); formulaBox.setAttribute('height', '40');
+            formulaBox.setAttribute('fill', '#f8fbff'); formulaBox.setAttribute('stroke', '#60a5fa');
+            formulaBox.setAttribute('stroke-width', '2'); formulaBox.setAttribute('rx', '8');
+            textGroup.appendChild(formulaBox);
+
+            const formulaLine = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            formulaLine.setAttribute('x', panelX + panelW / 2); formulaLine.setAttribute('y', panelY + 166);
+            formulaLine.setAttribute('font-size', '18px'); formulaLine.setAttribute('font-weight', '900');
+            formulaLine.setAttribute('fill', '#1f2937'); formulaLine.setAttribute('text-anchor', 'middle');
+            formulaLine.textContent = formulaText;
+            textGroup.appendChild(formulaLine);
+
+            const stampBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            stampBg.setAttribute('x', panelX + 56); stampBg.setAttribute('y', panelY + 194);
+            stampBg.setAttribute('width', panelW - 112); stampBg.setAttribute('height', '34');
+            stampBg.setAttribute('fill', isCorrect ? '#dcfce7' : '#fee2e2');
+            stampBg.setAttribute('stroke', isCorrect ? '#22c55e' : '#ef4444');
+            stampBg.setAttribute('stroke-width', '2'); stampBg.setAttribute('rx', '17');
+            textGroup.appendChild(stampBg);
+
+            const stamp = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            stamp.setAttribute('x', panelX + panelW / 2); stamp.setAttribute('y', panelY + 219);
+            stamp.setAttribute('font-size', '28px'); stamp.setAttribute('font-weight', '900');
+            stamp.setAttribute('fill', stampColor); stamp.setAttribute('text-anchor', 'middle');
+            stamp.textContent = isCorrect ? '✅ 正确！' : '❌ 再检查！';
+            textGroup.appendChild(stamp);
+
+            clone.appendChild(textGroup); maxX += 340;
         }
 
         let vbWidth = maxX - minX; let vbHeight = maxY - minY;
@@ -411,6 +862,17 @@
 
     function askForHint() {
         addAIMessage('我想要一个提示。', 'student');
+        if (currentStage === 'variant') {
+            addAIMessage('练习关先根据题干独立尝试。你可以回忆第一关：把复杂图形转化成熟悉图形，再用算式说明你的想法。', 'bot');
+            return;
+        }
+        if (currentShapeData && currentShapeData.hints) {
+            const hint = currentShapeData.hints[currentTool] || currentShapeData.hints.default;
+            if (hint) {
+                addAIMessage('提示：' + hint, 'bot');
+                return;
+            }
+        }
         if (currentTool === 'cut') {
             addAIMessage('提示：割的时候，优先寻找“凹进去的角”，从这里画辅助线，常常能把组合图形分成两个长方形。', 'bot');
         } else if (currentTool === 'fill') {
@@ -424,47 +886,29 @@
 
     function showDiagnosisHint() {
         clearDiagnosis();
-        
-        let targetShape = shapes.find(s => s.pts.length >= 5) || shapes[0];
-        if (!targetShape) return;
-        
-        let minX = Math.min(...targetShape.pts.map(p=>p.x)), maxX = Math.max(...targetShape.pts.map(p=>p.x));
-        let minY = Math.min(...targetShape.pts.map(p=>p.y)), maxY = Math.max(...targetShape.pts.map(p=>p.y));
-        
-        let concavePt = targetShape.pts.find(p => p.x > minX + 5 && p.x < maxX - 5 && p.y > minY + 5 && p.y < maxY - 5);
-        let topLeft = targetShape.pts.find(p => Math.abs(p.x - minX) < 5 && Math.abs(p.y - minY) < 5);
-        let bottomRight = targetShape.pts.find(p => Math.abs(p.x - maxX) < 5 && Math.abs(p.y - maxY) < 5);
-
-        if (concavePt && topLeft && bottomRight) {
-            const errorCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            errorCircle.setAttribute('cx', concavePt.x); errorCircle.setAttribute('cy', concavePt.y);
-            errorCircle.setAttribute('r', '45'); errorCircle.setAttribute('fill', 'none');
-            errorCircle.setAttribute('stroke', '#ef4444'); errorCircle.setAttribute('stroke-width', '4');
-            errorCircle.setAttribute('stroke-dasharray', '6,6'); errorCircle.setAttribute('class', 'pulsing-hint');
-            
-            const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line1.setAttribute('x1', topLeft.x); line1.setAttribute('y1', topLeft.y);
-            line1.setAttribute('x2', concavePt.x); line1.setAttribute('y2', concavePt.y);
-            line1.setAttribute('stroke', '#10b981'); line1.setAttribute('stroke-width', '4');
-            line1.setAttribute('stroke-dasharray', '8,8'); line1.setAttribute('class', 'pulsing-hint');
-
-            const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line2.setAttribute('x1', concavePt.x); line2.setAttribute('y1', concavePt.y);
-            line2.setAttribute('x2', bottomRight.x); line2.setAttribute('y2', bottomRight.y);
-            line2.setAttribute('stroke', '#10b981'); line2.setAttribute('stroke-width', '4');
-            line2.setAttribute('stroke-dasharray', '8,8'); line2.setAttribute('class', 'pulsing-hint');
-
-            diagLayer.appendChild(errorCircle); diagLayer.appendChild(line1); diagLayer.appendChild(line2);
-            showToast("💡 诊断：这三个点不在一条直线上哦！正确的辅助线应该分成两段连接凹角。", 'error');
-        } else {
-            showToast("❌ 哎呀，计算似乎有误，右侧已盖错题章，再检查一下吧！", 'error');
+        if (currentShapeData && shouldShowGuides()) {
+            guideLines.forEach(line => {
+                const hintLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                hintLine.setAttribute('x1', line.x1); hintLine.setAttribute('y1', line.y1);
+                hintLine.setAttribute('x2', line.x2); hintLine.setAttribute('y2', line.y2);
+                hintLine.setAttribute('stroke', '#10b981');
+                hintLine.setAttribute('stroke-width', '4');
+                hintLine.setAttribute('stroke-dasharray', '8,8');
+                hintLine.setAttribute('class', 'pulsing-hint');
+                diagLayer.appendChild(hintLine);
+            });
+            showToast(currentShapeData.diagnosis || "❌ 算式还没有通过。请对照虚线参照，检查每个数据和图形分块是否对应。", 'error');
+            return;
         }
+
+        showToast("❌ 算式还没有通过。请检查每个数能否在图上找到依据。", 'error');
     }
 
     function clearDiagnosis() { diagLayer.innerHTML = ''; }
 
     let isInteracting = false; let actionStartPt = null;
     let draggingShapeObj = null; let initShapeClone = null;
+    let draggingGuides = false; let initGuideClone = [];
 
     function getMousePt(e) {
         const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
@@ -474,12 +918,14 @@
     svg.addEventListener('pointerdown', (e) => {
         clearDiagnosis();
         const pt = getMousePt(e);
-        const snappedPt = { x: Math.round(pt.x / UNIT) * UNIT, y: Math.round(pt.y / UNIT) * UNIT };
+        const snappedPt = { x: Math.round(pt.x / SNAP) * SNAP, y: Math.round(pt.y / SNAP) * SNAP };
         let targetGroup = e.target.closest('.shape-poly');
         let shape = shapes.find(s => s.id === (targetGroup ? parseInt(targetGroup.dataset.id) : null));
 
         if (currentTool === 'drag' && shape) {
             isInteracting = true; draggingShapeObj = shape; actionStartPt = pt; initShapeClone = JSON.parse(JSON.stringify(shape));
+            draggingGuides = shapes.length === 1 && !shape.isVirtual;
+            initGuideClone = draggingGuides ? JSON.parse(JSON.stringify(guideLines)) : [];
             shapes = shapes.filter(s => s.id !== shape.id); shapes.push(shape); render();
         } 
         else if (currentTool === 'cut') {
@@ -509,16 +955,17 @@
         if (currentTool === 'drag' && draggingShapeObj) {
             const dx = pt.x - actionStartPt.x, dy = pt.y - actionStartPt.y;
             draggingShapeObj.pts = initShapeClone.pts.map(p => ({ x: p.x + dx, y: p.y + dy }));
-            draggingShapeObj.labels = initShapeClone.labels.map(l => ({ x: l.x + dx, y: l.y + dy, text: l.text }));
+            draggingShapeObj.labels = initShapeClone.labels.map(l => ({ x: l.x + dx, y: l.y + dy, text: l.text, rotate: l.rotate || 0 }));
+            if (draggingGuides) guideLines = initGuideClone.map(l => ({ x1: l.x1 + dx, y1: l.y1 + dy, x2: l.x2 + dx, y2: l.y2 + dy }));
             render();
         }
         else if (currentTool === 'cut') {
-            const snappedPt = { x: Math.round(pt.x / UNIT) * UNIT, y: Math.round(pt.y / UNIT) * UNIT };
+            const snappedPt = { x: Math.round(pt.x / SNAP) * SNAP, y: Math.round(pt.y / SNAP) * SNAP };
             document.getElementById('preview-line').setAttribute('x2', snappedPt.x);
             document.getElementById('preview-line').setAttribute('y2', snappedPt.y);
         }
         else if (currentTool === 'fill') {
-            const snappedPt = { x: Math.round(pt.x / UNIT) * UNIT, y: Math.round(pt.y / UNIT) * UNIT };
+            const snappedPt = { x: Math.round(pt.x / SNAP) * SNAP, y: Math.round(pt.y / SNAP) * SNAP };
             document.getElementById('preview-rect').setAttribute('points', `${actionStartPt.x},${actionStartPt.y} ${snappedPt.x},${actionStartPt.y} ${snappedPt.x},${snappedPt.y} ${actionStartPt.x},${snappedPt.y}`);
         }
     });
@@ -527,14 +974,15 @@
         if (!isInteracting) return;
         isInteracting = false;
         const pt = getMousePt(e);
-        const snappedPt = { x: Math.round(pt.x / UNIT) * UNIT, y: Math.round(pt.y / UNIT) * UNIT };
+        const snappedPt = { x: Math.round(pt.x / SNAP) * SNAP, y: Math.round(pt.y / SNAP) * SNAP };
 
         if (currentTool === 'drag' && draggingShapeObj) {
             const dx = pt.x - actionStartPt.x, dy = pt.y - actionStartPt.y;
-            const snapDx = Math.round(dx / UNIT) * UNIT, snapDy = Math.round(dy / UNIT) * UNIT;
+            const snapDx = Math.round(dx / SNAP) * SNAP, snapDy = Math.round(dy / SNAP) * SNAP;
             draggingShapeObj.pts = initShapeClone.pts.map(p => ({ x: p.x + snapDx, y: p.y + snapDy }));
-            draggingShapeObj.labels = initShapeClone.labels.map(l => ({ x: l.x + snapDx, y: l.y + snapDy, text: l.text }));
-            draggingShapeObj = null; render();
+            draggingShapeObj.labels = initShapeClone.labels.map(l => ({ x: l.x + snapDx, y: l.y + snapDy, text: l.text, rotate: l.rotate || 0 }));
+            if (draggingGuides) guideLines = initGuideClone.map(l => ({ x1: l.x1 + snapDx, y1: l.y1 + snapDy, x2: l.x2 + snapDx, y2: l.y2 + snapDy }));
+            draggingShapeObj = null; draggingGuides = false; initGuideClone = []; render();
         }
         else if (currentTool === 'cut') {
             document.getElementById('preview-line').style.display = 'none';
@@ -663,6 +1111,15 @@
         return Math.abs(area / 2);
     }
 
+    function roundToTwo(value) {
+        return Math.round(value * 100) / 100;
+    }
+
+    function formatLengthCm(value) {
+        const rounded = Math.round(value * 2) / 2;
+        return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+    }
+
     function executeLabeling(clickPt) {
         let minDist = 25, targetEdge = null, targetShape = null;
         shapes.forEach(shape => {
@@ -675,14 +1132,14 @@
 
         if (targetEdge && targetShape) {
             const { p1, p2 } = targetEdge;
-            const lengthMeters = Math.round(Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2) / UNIT);
+            const lengthCm = Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2) / UNIT;
             const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
             let nx = -(p2.y - p1.y), ny = (p2.x - p1.x);
             let len = Math.sqrt(nx*nx + ny*ny); nx /= len; ny /= len;
             let cx = targetShape.pts.reduce((sum, p) => sum + p.x, 0) / targetShape.pts.length;
             let cy = targetShape.pts.reduce((sum, p) => sum + p.y, 0) / targetShape.pts.length;
             if (nx * (mx - cx) + ny * (my - cy) < 0) { nx = -nx; ny = -ny; }
-            targetShape.labels.push({ x: mx + nx * 22, y: my + ny * 22, text: lengthMeters + 'm' });
+            targetShape.labels.push({ x: mx + nx * 22, y: my + ny * 22, text: formatLengthCm(lengthCm) + ' cm' });
             render();
         }
     }
@@ -708,16 +1165,16 @@
         if (!calcExpression) return;
         try {
             let evalStr = calcExpression.replace(/×/g, '*').replace(/÷/g, '/');
-            let result = Math.round(eval(evalStr) * 100) / 100; 
+            let result = roundToTwo(eval(evalStr)); 
             displayEl.innerText = calcExpression + "\n= " + result;
             
-            if (result === targetArea) {
+            if (Math.abs(result - targetArea) < 0.01) {
                 clearDiagnosis();
-                pendingFormula = `${calcExpression} = ${result}(m²)`;
+                pendingFormula = `${calcExpression} = ${result}(cm²)`;
                 document.getElementById('modal-overlay').style.display = 'flex';
             } else {
                 showDiagnosisHint();
-                setTimeout(() => { takeSnapshot(`${calcExpression} = ${result}(m²)`, false); }, 100); 
+                setTimeout(() => { takeSnapshot(`${calcExpression} = ${result}(cm²)`, false); }, 100); 
             }
             calcExpression = result.toString();
         } catch (e) {
@@ -754,7 +1211,10 @@
         toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 4000);
     }
 
+    renderChoiceCards();
+    updateStageControls();
     initShapes();
 </script>
 </body>
 </html>
+<!-- 图形转换研究室2.0：第一关为基础例图探索，第二关为变式迁移应用。 -->
